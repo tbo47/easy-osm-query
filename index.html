@@ -5,15 +5,13 @@
 </body>
 <script src="index.js"></script>
 <script>
-   this.getRestaurants().then(response => {
-        console.log(response)
+    this.getRestaurants().then(pois => {
+        console.log(pois)
         const list = document.querySelector('ul')
-        response.elements.forEach(poi => {
-            if (poi?.tags?.name) {
-                const element = document.createElement('li')
-                element.appendChild(document.createTextNode(poi.tags.name))
-                list.appendChild(element);
-            }
+        pois.forEach(poi => {
+            const element = document.createElement('li')
+            element.appendChild(document.createTextNode(poi.tags.name))
+            list.appendChild(element);
         })
     })
 </script>

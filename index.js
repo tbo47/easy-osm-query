@@ -28,7 +28,7 @@ function getRestaurants() {
     return new Promise(resolve => {
         xhr.onload = function () {
             const data = JSON.parse(this.responseText);
-            resolve(data);
+            resolve(data.elements.filter(p => p.tags));
         };
     })
 }
