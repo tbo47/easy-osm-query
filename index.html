@@ -5,15 +5,21 @@
 </body>
 <script src="index.js"></script>
 <script>
-    this.getRestaurants().then(pois => {
+    (async () => {
+
+        const { pois, latitude, longitude } = await this.getRestaurantsAroundMe()
+        console.log(latitude)
+        console.log(longitude)
         console.log(pois)
         const list = document.querySelector('ul')
         pois.forEach(poi => {
             const element = document.createElement('li')
-            element.appendChild(document.createTextNode(poi.tags.name))
+            const txt = `${poi.name} - ${poi.osm_url}`
+            element.appendChild(document.createTextNode(txt))
             list.appendChild(element);
         })
-    })
+
+    })()
 </script>
 
 </html>

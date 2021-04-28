@@ -1,7 +1,33 @@
-function getRestaurants() {
+
+/**
+ * Get the current location of the user. Will only work on https.
+ * @returns { latitude, longitude }
+ */
+function _getLocation() {
+    return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => resolve(position.coords))
+        } else {
+            reject('Geolocation is not supported by this browser.')
+        }
+    })
+}
+
+async function getLocationLink() {
+    const position = await _getLocation()
+    const url = `https://www.openstreetmap.org/#map=17/${position.latitude}/${position.longitude}`
+    return url
+}
+
+/**
+ * Query an openstreetmap server to fetch POIs
+ * 
+ * @param {*} bbox the rectangle where to perform the query
+ * @param {*} categories of pois. Like restaurant, cafe...
+ * @returns Promise<Poi[]>
+ */
+function _getPois(bbox, categories) {
     const url = 'https://overpass-api.de/api/interpreter';
-    const bbox = '37.845138693438756,-122.3001480102539,37.87644551927934,-122.27182388305664'
-    const categories = ['cafe', 'restaurant']
 
     let quest = '';
     categories.forEach(c => {
@@ -28,7 +54,33 @@ function getRestaurants() {
     return new Promise(resolve => {
         xhr.onload = function () {
             const data = JSON.parse(this.responseText);
-            resolve(data.elements.filter(p => p.tags));
+            const pois = data.elements.filter(p => p.tags).map(p => {
+                p = { ...p, ...p.tags } // merge the tags object into the main one
+                delete p.tags
+                p.osm_url = `https://www.openstreetmap.org/${p.type}/${p.id}`
+                p.osm_url_edit = `https://www.openstreetmap.org/edit?${p.type}=${p.id}`
+                return p
+            })
+            resolve(pois)
         };
     })
+}
+
+/**
+ * 
+ * @returns Promise<POI[]> restaurants and cafes
+ */
+function getRestaurants() {
+    return _getPois('37.8451386,-122.300148,37.8764455,-122.271823', ['cafe', 'restaurant'])
+}
+
+async function getRestaurantsAroundMe() {
+    const { latitude, longitude } = await _getLocation()
+    const bbox = []
+    bbox.push(latitude - 0.01)
+    bbox.push(longitude - 0.01)
+    bbox.push(latitude + 0.01)
+    bbox.push(longitude + 0.01)
+    const pois = await _getPois(bbox.join(','), ['cafe', 'restaurant'])
+    return { pois, latitude, longitude }
 }
