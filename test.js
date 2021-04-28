@@ -1,8 +1,6 @@
-import EasyOsmQuery from './index.js'
+const easyOsm = require('./index');
 
-const easyOsmQuery = new EasyOsmQuery()
-
-easyOsmQuery.getPois().then(restaurants => {
+easyOsm.getPois().then(restaurants => {
     restaurants.forEach(resto => {
         console.log(resto.tags.name)
     });

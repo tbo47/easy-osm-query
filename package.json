@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Library to simplify openstreetmap queries",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "node test.js"
   },
