@@ -1,0 +1,21 @@
+<html>
+
+<body>
+    <ul></ul>
+</body>
+<script src="index.js"></script>
+<script>
+   this.getRestaurants().then(response => {
+        console.log(response)
+        const list = document.querySelector('ul')
+        response.elements.forEach(poi => {
+            if (poi?.tags?.name) {
+                const element = document.createElement('li')
+                element.appendChild(document.createTextNode(poi.tags.name))
+                list.appendChild(element);
+            }
+        })
+    })
+</script>
+
+</html>

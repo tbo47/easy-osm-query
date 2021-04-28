@@ -1,8 +1,7 @@
-const axios = require('axios').default;
-
-const overpassUrl = 'https://overpass-api.de/api/interpreter';
-
-exports.getPois = async function (bbox = '37.845138693438756,-122.3001480102539,37.87644551927934,-122.27182388305664', categories = ['cafe', 'restaurant']) {
+function getRestaurants() {
+    const url = 'https://overpass-api.de/api/interpreter';
+    const bbox = '37.845138693438756,-122.3001480102539,37.87644551927934,-122.27182388305664'
+    const categories = ['cafe', 'restaurant']
 
     let quest = '';
     categories.forEach(c => {
@@ -22,9 +21,14 @@ exports.getPois = async function (bbox = '37.845138693438756,-122.3001480102539,
         >;
         out skel qt;`;
 
-
-    const response = await axios.post(overpassUrl, q);
-    const pois = response.data.elements;
-    pois.forEach(p_1 => p_1.osm_url = `https://www.openstreetmap.org/${p_1.type}/${p_1.id}`);
-    return pois.filter(p_2 => p_2.tags);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(q);
+    return new Promise(resolve => {
+        xhr.onload = function () {
+            const data = JSON.parse(this.responseText);
+            resolve(data);
+        };
+    })
 }
