@@ -30,11 +30,11 @@ function _getPois(bbox, categories) {
     const url = 'https://overpass-api.de/api/interpreter';
 
     let quest = '';
-    categories.forEach(c => {
+    categories.forEach(({ key, value }) => {
         const p = `
-          node["amenity"="${c}"](${bbox});
-          way["amenity"="${c}"](${bbox});
-          relation["amenity"="${c}"](${bbox});`;
+          node["${key}"="${value}"](${bbox});
+          way["${key}"="${value}"](${bbox});
+          relation["${key}"="${value}"](${bbox});`;
         quest += p;
     });
 
@@ -71,7 +71,7 @@ function _getPois(bbox, categories) {
  * @returns Promise<POI[]> restaurants and cafes
  */
 function getRestaurants() {
-    return _getPois('37.8451386,-122.300148,37.8764455,-122.271823', ['cafe', 'restaurant'])
+    return _getPois('37.8,-122.3,37.8,-122.2', [{ key: 'amenity', value: 'cafe' }, { key: 'amenity', value: 'restaurant' }])
 }
 
 async function getRestaurantsAroundMe() {
@@ -81,6 +81,8 @@ async function getRestaurantsAroundMe() {
     bbox.push(longitude - 0.01)
     bbox.push(latitude + 0.01)
     bbox.push(longitude + 0.01)
-    const pois = await _getPois(bbox.join(','), ['cafe', 'restaurant'])
+    const categories = [{ key: 'amenity', value: 'cafe' }, { key: 'amenity', value: 'restaurant' }]
+    // const categories = [{ key: 'leisure', value: 'park' }]
+    const pois = await _getPois(bbox.join(','), categories)
     return { pois, latitude, longitude }
 }
