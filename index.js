@@ -74,13 +74,13 @@ function getRestaurants() {
     return _getPois('37.8,-122.3,37.8,-122.2', [{ key: 'amenity', value: 'cafe' }, { key: 'amenity', value: 'restaurant' }])
 }
 
-async function getRestaurantsAroundMe() {
+async function getRestaurantsAroundMe(radius = 0.01) {
     const { latitude, longitude } = await _getLocation()
     const bbox = []
-    bbox.push(latitude - 0.01)
-    bbox.push(longitude - 0.01)
-    bbox.push(latitude + 0.01)
-    bbox.push(longitude + 0.01)
+    bbox.push(latitude - radius)
+    bbox.push(longitude - radius)
+    bbox.push(latitude + radius)
+    bbox.push(longitude + radius)
     const categories = [{ key: 'amenity', value: 'cafe' }, { key: 'amenity', value: 'restaurant' }]
     // const categories = [{ key: 'leisure', value: 'park' }]
     const pois = await _getPois(bbox.join(','), categories)

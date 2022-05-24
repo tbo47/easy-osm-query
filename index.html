@@ -1,27 +1,32 @@
 <html>
-
-<body>
+  <body>
     <ul></ul>
-</body>
-<script src="index.js"></script>
-<script>
+  </body>
+  <script src="index.js"></script>
+  <script>
     (async () => {
+      const { pois, latitude, longitude } = await this.getRestaurantsAroundMe();
+      console.log(
+        `https://www.openstreetmap.org/#map=16/${latitude}/${longitude}`
+      );
+      console.log(pois);
+      const list = document.querySelector("ul");
+      pois.forEach((poi) => {
+        const element = document.createElement("li");
 
-        const { pois, latitude, longitude } = await this.getRestaurantsAroundMe()
-        console.log(`https://www.openstreetmap.org/#map=16/${latitude}/${longitude}`)
-        console.log(pois)
-        const list = document.querySelector('ul')
-        pois.forEach(poi => {
-            const element = document.createElement('li')
-            const a = document.createElement('a')
-            const aText = document.createTextNode(poi.name);
-            a.setAttribute('href', poi.osm_url);
-            a.appendChild(aText);
-            element.appendChild(a   )
-            list.appendChild(element);
-        })
+        const a = document.createElement("a");
+        a.innerHTML = poi.name
+        a.setAttribute("href", poi.osm_url);
+        element.appendChild(a);
 
-    })()
-</script>
+        if (false) {
+          const span = document.createElement("span");
+          span.innerHTML = ` | ${poi.website}`;
+          element.appendChild(span);
+        }
 
+        list.appendChild(element);
+      });
+    })();
+  </script>
 </html>
