@@ -1,31 +1,36 @@
 <html>
   <body>
-    <ul></ul>
+    <div id="loading">loading...</div>
+    <div id="diets"></div>
+    <ol id="pois"></ol>
   </body>
   <script src="index.js"></script>
   <script>
+    const addToId = (id, c) => {
+      document.getElementById(id).innerHTML += c;
+    };
+
     (async () => {
       const { pois, latitude, longitude } = await this.getRestaurantsAroundMe();
-      console.log(
-        `https://www.openstreetmap.org/#map=16/${latitude}/${longitude}`
-      );
-      console.log(pois);
-      const list = document.querySelector("ul");
+      document.getElementById("loading").innerHTML = "";
+
+      const diets = this.extractDiets(pois);
+
+      const dietsHtml = diets
+        .map((d) => `<span class="">${d.at(0)} (${d.at(1)})</span>`)
+        .join(` | `);
+      addToId(`diets`, dietsHtml);
+
       pois.forEach((poi) => {
-        const element = document.createElement("li");
+        if (!poi.name) return;
 
-        const a = document.createElement("a");
-        a.innerHTML = poi.name
-        a.setAttribute("href", poi.osm_url);
-        element.appendChild(a);
+        const a = `<a href="${poi.osm_url}" target="${poi.type}">${poi.name}</a>`;
 
-        if (false) {
-          const span = document.createElement("span");
-          span.innerHTML = ` | ${poi.website}`;
-          element.appendChild(span);
-        }
+        const w = poi.website
+          ? ` | <a href="${poi.website}" target="w">website</a>`
+          : ``;
 
-        list.appendChild(element);
+        addToId(`pois`, `<li>${a} ${w} | ${poi.cuisine}</li>`);
       });
     })();
   </script>

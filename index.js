@@ -47,18 +47,20 @@ function _getPois(bbox, categories) {
         >;
         out skel qt;`;
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(q);
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', url, true)
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.send(q)
     return new Promise(resolve => {
         xhr.onload = function () {
-            const data = JSON.parse(this.responseText);
+            const data = JSON.parse(this.responseText)
             const pois = data.elements.filter(p => p.tags).map(p => {
                 p = { ...p, ...p.tags } // merge the tags object into the main one
                 delete p.tags
-                p.osm_url = `https://www.openstreetmap.org/${p.type}/${p.id}`
-                p.osm_url_edit = `https://www.openstreetmap.org/edit?${p.type}=${p.id}`
+                const type = p.members ? 'relation' : p.type
+                if (!p.website && p[`contact:website`]) p.website = p[`contact:website`]
+                p.osm_url = `https://www.openstreetmap.org/${type}/${p.id}`
+                p.osm_url_edit = `https://www.openstreetmap.org/edit?${type}=${p.id}`
                 return p
             })
             resolve(pois)
@@ -74,7 +76,7 @@ function getRestaurants() {
     return _getPois('37.8,-122.3,37.8,-122.2', [{ key: 'amenity', value: 'cafe' }, { key: 'amenity', value: 'restaurant' }])
 }
 
-async function getRestaurantsAroundMe(radius = 0.01) {
+async function getRestaurantsAroundMe(radius = 0.1) {
     const { latitude, longitude } = await _getLocation()
     const bbox = []
     bbox.push(latitude - radius)
@@ -85,4 +87,25 @@ async function getRestaurantsAroundMe(radius = 0.01) {
     // const categories = [{ key: 'leisure', value: 'park' }]
     const pois = await _getPois(bbox.join(','), categories)
     return { pois, latitude, longitude }
+}
+
+// extract diets from POIs (only makes sense for restaurants)
+function extractDiets(pois) {
+    const dietsMap = new Map() // stores ['thai': 3] if thai restaurants have been seen 3 times
+    pois.forEach(poi => {
+        const diets = new Set()
+        // extract poi.cuisine
+        poi.cuisine?.split(`;`)?.forEach(c => diets.add(c?.trim()?.toLowerCase()))
+        // extract poi.diet:thai == yes for example
+        Object.keys(poi)
+            .filter(key => key.startsWith(`diet`) && poi[key] === `yes`)
+            .forEach(key => diets.add(key.split(`:`).at(1)))
+
+        diets.forEach(diet => {
+            if (dietsMap.has(diet)) dietsMap.set(diet, dietsMap.get(diet) + 1)
+            else dietsMap.set(diet, 1)
+        })
+    })
+    const dietsSorted = Array.from(dietsMap.entries()).sort((a, b) => b[1] - a[1])
+    return dietsSorted
 }
