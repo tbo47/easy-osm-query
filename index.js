@@ -1,4 +1,6 @@
 
+const zoom = 16 // the default map zoom
+
 /**
  * Get the current location of the user. Will only work on https.
  * @returns { latitude, longitude }
@@ -76,7 +78,7 @@ function getRestaurants() {
     return _getPois('37.8,-122.3,37.8,-122.2', [{ key: 'amenity', value: 'cafe' }, { key: 'amenity', value: 'restaurant' }])
 }
 
-async function getRestaurantsAroundMe(radius = 0.1) {
+async function getRestaurantsAroundMe(radius = 0.03) {
     const { latitude, longitude } = await _getLocation()
     const bbox = []
     bbox.push(latitude - radius)
@@ -108,4 +110,21 @@ function extractDiets(pois) {
     })
     const dietsSorted = Array.from(dietsMap.entries()).sort((a, b) => b[1] - a[1])
     return dietsSorted
+}
+
+function initMap({ pois, latitude, longitude }) {
+    const lg = L.layerGroup()
+    const markers = new Map()
+    pois.filter(p => p.lat && p.lon).forEach(p => {
+        const extra = [`<a href="${p.osm_url}" target="osm">osm</a>`]
+        if (p.website) extra.push(`<a href="${p.website}" target="w">web</a>`)
+        const addr = p[`addr:street`]
+        if (addr) extra.push(`<a href="https://www.google.com/search?q=${p.name} ${addr}" target="g">g</a>`)
+        const html = `<div>${p.name}</div><div>${extra.join(" | ")}`
+        const marker = L.marker([p.lat, p.lon]).bindPopup(html).addTo(lg)
+        markers.set(p, marker)
+    })
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    const map = L.map('map', { center: [latitude, longitude], zoom, layers: [osm, lg] })
+    return { map, markers }
 }

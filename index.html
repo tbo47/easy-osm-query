@@ -1,36 +1,55 @@
 <html>
+  <head>
+    <title>Restaurants</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+      integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="index.css" />
+  </head>
   <body>
-    <div id="loading">loading...</div>
-    <div id="diets"></div>
-    <ol id="pois"></ol>
+    <div style="display: flex; height: 100vh">
+      <div style="flex: 20%; overflow-y: auto">
+        <div id="loading">loading...</div>
+        <div id="diets"></div>
+        <div id="pois"></div>
+      </div>
+      <div id="map" style="flex: 80%"></div>
+    </div>
   </body>
+  <script
+    src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+    integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+    crossorigin=""
+  ></script>
   <script src="index.js"></script>
   <script>
-    const addToId = (id, c) => {
-      document.getElementById(id).innerHTML += c;
-    };
-
     (async () => {
       const { pois, latitude, longitude } = await this.getRestaurantsAroundMe();
+
       document.getElementById("loading").innerHTML = "";
 
-      const diets = this.extractDiets(pois);
+      const { map, markers } = this.initMap({ pois, latitude, longitude });
 
+      const diets = this.extractDiets(pois);
       const dietsHtml = diets
         .map((d) => `<span class="">${d.at(0)} (${d.at(1)})</span>`)
         .join(` | `);
-      addToId(`diets`, dietsHtml);
+      document.getElementById(`diets`).innerHTML += dietsHtml;
 
       pois.forEach((poi) => {
         if (!poi.name) return;
-
-        const a = `<a href="${poi.osm_url}" target="${poi.type}">${poi.name}</a>`;
-
-        const w = poi.website
-          ? ` | <a href="${poi.website}" target="w">website</a>`
-          : ``;
-
-        addToId(`pois`, `<li>${a} ${w}</li>`);
+        const div = document.createElement("div");
+        const a = document.createElement("a");
+        a.innerHTML = poi.name;
+        div.appendChild(a);
+        a.addEventListener("click", () => {
+          markers.get(poi).openPopup();
+          map.fitBounds(L.latLngBounds([markers.get(poi).getLatLng()]))
+        });
+        document.getElementById(`pois`).appendChild(div);
       });
     })();
   </script>
