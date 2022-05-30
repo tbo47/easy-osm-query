@@ -25,14 +25,14 @@ async function getLocationLink() {
  * Query an openstreetmap server to fetch POIs
  * 
  * @param {*} bbox the rectangle where to perform the query
- * @param {*} categories of pois. Like restaurant, cafe...
+ * @param {Array.<Array>} categories of pois. Like restaurant, cafe...
  * @returns Promise<Poi[]>
  */
 function _getPois(bbox, categories) {
     const url = 'https://overpass-api.de/api/interpreter';
 
     let quest = '';
-    categories.forEach(({ key, value }) => {
+    categories.forEach(([key, value]) => {
         const p = `
           node["${key}"="${value}"](${bbox});
           way["${key}"="${value}"](${bbox});
@@ -85,8 +85,8 @@ async function getRestaurantsAroundMe(radius = 0.03) {
     bbox.push(longitude - radius)
     bbox.push(latitude + radius)
     bbox.push(longitude + radius)
-    const categories = [{ key: 'amenity', value: 'cafe' }, { key: 'amenity', value: 'restaurant' }]
-    // const categories = [{ key: 'leisure', value: 'park' }]
+    let categories = [['amenity', 'cafe'], ['amenity', 'restaurant'], ['shop', 'deli'], ['amenity', 'ice_cream'], ['amenity', 'fast_food']]
+    // categories = [['leisure', 'park'], ['leisure', 'swimming_pool']]
     const pois = await _getPois(bbox.join(','), categories)
     return { pois, latitude, longitude }
 }
@@ -116,11 +116,17 @@ function initMap({ pois, latitude, longitude }) {
     const lg = L.layerGroup()
     const markers = new Map()
     pois.filter(p => p.lat && p.lon).forEach(p => {
-        const extra = [`<a href="${p.osm_url}" target="osm">osm</a>`]
-        if (p.website) extra.push(`<a href="${p.website}" target="w">web</a>`)
-        const addr = p[`addr:street`]
-        if (addr) extra.push(`<a href="https://www.google.com/search?q=${p.name} ${addr}" target="g">g</a>`)
-        const html = `<div>${p.name}</div><div>${extra.join(" | ")}`
+        const extra = []
+        extra.push(`<a href="${p.osm_url}" target="osm" title="Contribute on openstreetmap">osm</a>`)
+        if (p.website) extra.push(`<a href="${p.website}" target="w" title="Visit the website">web</a>`)
+        const addr = p[`addr:street`] ? p[`addr:housenumber`] + ' ' + p[`addr:street`] : ``
+        const name = p.name?.replaceAll(`&`, ` `)
+        if (addr) {
+            extra.push(`<a href="https://www.google.com/search?q=${name} ${addr}" target="g" title="Search in google">g</a>`)
+            extra.push(`<a href="https://www.bing.com/search?q=${name} ${addr}" target="b" title="Search in bing">b</a>`)
+        }
+        const cuisine = p.cuisine ? `<div>${p.cuisine.split(';').join(', ')}</div>` : ``
+        const html = `<div>${p.name}</div><div>${cuisine}</div><div>${extra.join(" | ")}`
         const marker = L.marker([p.lat, p.lon]).bindPopup(html).addTo(lg)
         markers.set(p, marker)
     })

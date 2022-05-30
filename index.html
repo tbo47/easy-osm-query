@@ -46,8 +46,11 @@
         a.innerHTML = poi.name;
         div.appendChild(a);
         a.addEventListener("click", () => {
-          markers.get(poi).openPopup();
-          map.fitBounds(L.latLngBounds([markers.get(poi).getLatLng()]))
+          const leafletMarker = markers.get(poi);
+          if (leafletMarker) {
+            leafletMarker.openPopup();
+            map.fitBounds(L.latLngBounds([leafletMarker.getLatLng()]));
+          }
         });
         document.getElementById(`pois`).appendChild(div);
       });
